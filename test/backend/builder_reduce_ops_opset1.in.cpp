@@ -76,3 +76,18 @@ NGRAPH_TEST(${BACKEND_NAME}, builder_opset1_mean_dynamic_2)
 
     test_case.run();
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, builder_reshape)
+{
+    const Shape input_shape{1, 1, 1};
+    const auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    const auto reshape_builder = builder::opset1::reshape(input, Shape{});
+    auto function = make_shared<Function>(reshape_builder, ParameterVector{input});
+
+    auto test_case = NgraphTestCase(function, "${BACKEND_NAME}", BackendMode::STATIC);
+    vector<float> input_values(shape_size(input_shape), 1.f);
+    test_case.add_input<float>(input_shape, input_values);
+    test_case.add_expected_output<float>(Shape{}, vector<float>{1.f});
+
+    test_case.run();
+}

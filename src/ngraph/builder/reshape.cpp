@@ -177,10 +177,24 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
         ->add_provenance_group_members_above({value});
 }
 
+NGRAPH_API
 shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
-    const auto out_pattern = op::Constant::create(
-        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+    shared_ptr<op::Constant> out_pattern;
+    if (value.get_shape() == shape)
+    {
+        return value.get_node_shared_ptr();
+    }
+    else if (is_scalar(shape))
+    {
+        out_pattern = op::Constant::create(element::i64, Shape{1}, vector<int64_t>{0});
+    }
+    else
+    {
+        out_pattern = op::Constant::create(
+            element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+    }
+
     const bool special_zero = false;
     return make_shared<ngraph::opset1::Reshape>(value, out_pattern, special_zero)
         ->add_provenance_group_members_above({value});
